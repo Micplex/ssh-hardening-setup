@@ -1,0 +1,124 @@
+# =============================================================================
+# SSH Daemon Configuration — Hardened Template
+# =============================================================================
+# Based on Mozilla OpenSSH Guidelines (Intermediate) and CIS Benchmarks.
+# 
+# INSTALLATION:
+#   1. Back up your current config:
+#      sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup.$(date +%Y%m%d)
+#   2. Copy this file:
+#      sudo cp sshd_config.template /etc/ssh/sshd_config
+#   3. Edit the AllowUsers line below to match YOUR username(s).
+#   4. Validate: sudo sshd -t
+#   5. Restart:  sudo systemctl restart sshd
+#
+# ⚠️  WARNING: This disables password authentication.
+#     Ensure SSH key authentication is working BEFORE applying this config.
+#     Keep a second terminal open as a fallback.
+# =============================================================================
+
+# ---- Port and Address Family ----
+Port 22
+# Port 2222  # Uncomment to use a non-standard port (reduces log noise)
+AddressFamily inet
+# ListenAddress 0.0.0.0
+
+# ---- Authentication ----
+# ❌ Disable root login. Use a regular user + sudo.
+PermitRootLogin no
+
+# ❌ Disable password authentication. Keys only.
+PasswordAuthentication no
+
+# ❌ Disable keyboard-interactive / challenge-response (PAM-based password auth).
+ChallengeResponseAuthentication no
+
+# ✅ Enable public key authentication.
+PubkeyAuthentication yes
+
+# ❌ Reject accounts with empty passwords.
+PermitEmptyPasswords no
+
+# ---- Allowed Users ----
+# 🔴 CHANGE THIS LINE to your actual username(s).
+# Only the listed users can SSH in, even with a valid key.
+AllowUsers yourusername
+# Examples:
+# AllowUsers alice
+# AllowUsers alice bob carol
+
+# ---- Strong Cryptography ----
+# Only modern, secure algorithms. Disables SHA1, CBC, DSA, weak ECDSA.
+KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com
+MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com
+HostKeyAlgorithms ssh-ed25519,ssh-ed25519-cert-v01@openssh.com
+
+# ---- Connection Limits ----
+# Limit authentication attempts per connection.
+MaxAuthTries 3
+
+# Limit concurrent unauthenticated connections.
+MaxStartups 10:30:60
+
+# Limit sessions per connection.
+MaxSessions 10
+
+# Send keepalive every 5 minutes to detect dead connections.
+ClientAliveInterval 300
+
+# Drop connection after 2 missed keepalives (10 minutes).
+ClientAliveCountMax 2
+
+# Disconnect if client hasn't authenticated within 30 seconds.
+LoginGraceTime 30
+
+# ---- Disable Unnecessary Features ----
+# Disable X11 forwarding (graphical apps over SSH).
+X11Forwarding no
+
+# Disable SSH agent forwarding (prevents credential relay).
+AllowAgentForwarding no
+
+# Disable TCP forwarding (prevents tunneling).
+AllowTcpForwarding no
+
+# Disable SSH tunneling.
+PermitTunnel no
+
+# Disable StreamLocal forwarding.
+AllowStreamLocalForwarding no
+
+# Disable GatewayPorts.
+GatewayPorts no
+
+# ---- Logging ----
+# Log to the AUTH facility with verbose detail (helps auditing).
+SyslogFacility AUTH
+LogLevel VERBOSE
+
+# ---- Host Keys ----
+# Only use Ed25519 host key if available (generate with: ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key)
+HostKey /etc/ssh/ssh_host_ed25519_key
+HostKey /etc/ssh/ssh_host_rsa_key
+
+# ---- Other Security Settings ----
+# Disable rhosts-based authentication (legacy, insecure).
+HostbasedAuthentication no
+IgnoreRhosts yes
+
+# Disable environment processing from clients.
+PermitUserEnvironment no
+
+# Disable Kerberos unless you specifically use it.
+KerberosAuthentication no
+GSSAPIAuthentication no
+
+# Strict mode checks file permissions on ~/.ssh/ and authorized_keys.
+StrictModes yes
+
+# Use privilege separation for security isolation.
+UsePAM yes
+
+# ---- Subsystem ----
+Subsystem sftp /usr/lib/openssh/sftp-server

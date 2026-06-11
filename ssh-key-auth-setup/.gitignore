@@ -1,0 +1,30 @@
+# SSH private keys — NEVER commit these
+id_rsa
+id_ed25519
+id_ecdsa
+id_dsa
+*.pem
+*.key
+!*.pub
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temp / backups
+*.bak
+*.tmp
+*.log
+backups/
+
+# Environment-specific
+.env
+*.local

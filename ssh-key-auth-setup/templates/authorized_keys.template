@@ -1,0 +1,76 @@
+# =============================================================================
+# authorized_keys — Template with Explanations
+# =============================================================================
+# Location: ~/.ssh/authorized_keys (on the SERVER)
+# Permissions: 600 (chmod 600 ~/.ssh/authorized_keys)
+# Owner: user:user (NOT root)
+#
+# Each line is one public key. Format:
+#   [options] <key-type> <base64-key> <comment>
+#
+# The <comment> is free-form and used to identify the key.
+# Use descriptive comments like "alice@company.com" or "bob-laptop-2026".
+# =============================================================================
+
+# ---- Example 1: Basic Key (No Restrictions) ----
+# This is the simplest form — a public key with just a comment.
+# The user gets a full shell with no restrictions.
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGx... alice@company.com
+
+# ---- Example 2: Deploy-Only Key ----
+# This key can ONLY run /home/deploy/deploy.sh.
+# No shell, no port forwarding, no agent forwarding, no PTY.
+# When deploy.sh exits, the SSH connection closes automatically.
+command="/home/deploy/deploy.sh",no-port-forwarding,no-agent-forwarding,no-pty ssh-ed25519 AAAAC3NzaC... deploy-bot@ci
+
+# ---- Example 3: Office-Only Admin Key ----
+# This key only works from the office IP range.
+# From anywhere else, the connection is rejected before authentication.
+from="10.0.0.0/8,172.16.0.0/12" ssh-ed25519 AAAAC3NzaC... admin@work-laptop
+
+# ---- Example 4: Read-Only Backup Key ----
+# Forces rsync in read-only (sender) mode.
+# The key can read files but cannot write or get a shell.
+command="rsync --server --sender -vlogDtprze.iLsfx . /",no-agent-forwarding,no-port-forwarding,no-pty,no-X11-forwarding ssh-ed25519 AAAAC3NzaC... backup@nas
+
+# ---- Example 5: Time-Limited Access ----
+# Key only works during business hours (via a wrapper script).
+# The wrapper checks the time and either runs the requested command or rejects.
+command="/usr/local/bin/time-restricted-shell.sh" ssh-ed25519 AAAAC3NzaC... contractor@agency.com
+
+# ---- Example 6: Maximum Lockdown ----
+# The 'restrict' option is shorthand for disabling ALL forwarding features.
+# Combine with command= for a locked-down automation key.
+restrict,command="/usr/local/bin/single-task.sh" ssh-ed25519 AAAAC3NzaC... task-runner
+
+# ---- Example 7: Multiple Keys for One User ----
+# A single user can have many keys — laptop, desktop, emergency backup.
+# Each is identified by its comment.
+ssh-ed25519 AAAAC3NzaC... alice-laptop@company.com
+ssh-ed25519 AAAAC3NzaC... alice-desktop@company.com
+ssh-ed25519 AAAAC3NzaC... alice-emergency@company.com
+
+# ---- Example 8: Key with Environment Variables ----
+# Set environment variables for the session.
+# Useful for setting app-specific config paths or debug flags.
+environment="APP_ENV=production",environment="DEPLOY_PATH=/opt/app" ssh-ed25519 AAAAC3NzaC... deployer@ci
+
+# ---- Example 9: Cert-Based Authentication (OpenSSH Certificates) ----
+# If you use SSH certificates instead of raw keys:
+# cert-authority ssh-ed25519 AAAAC3NzaC... trusted-ca@org.com
+
+# =============================================================================
+# Available Options Reference
+# =============================================================================
+# command="/path"        — Force a specific command (no shell)
+# from="IP/CIDR"         — Restrict source IP addresses
+# no-agent-forwarding    — Disable ssh-agent forwarding
+# no-port-forwarding     — Disable TCP port forwarding
+# no-X11-forwarding      — Disable X11 forwarding
+# no-pty                 — Disable pseudo-terminal allocation
+# no-user-rc             — Skip ~/.ssh/rc execution
+# permitopen="host:port" — Limit port forwarding to specific destinations
+# restrict               — Enable all forwarding restrictions (OpenSSH 7.2+)
+# environment="VAR=val"  — Set environment variables
+# cert-authority         — Mark this key as a certificate authority
+# =============================================================================

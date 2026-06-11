@@ -1,0 +1,106 @@
+# =============================================================================
+# SSH Client Configuration — ~/.ssh/config Template
+# =============================================================================
+# This file lives on YOUR LOCAL MACHINE at ~/.ssh/config
+# It tells your SSH client which key to use for which server,
+# simplifying connections and enforcing security defaults.
+#
+# INSTALLATION:
+#   1. Copy this file to ~/.ssh/config
+#   2. Edit the Host, HostName, User, and IdentityFile values
+#   3. Ensure permissions: chmod 600 ~/.ssh/config
+# =============================================================================
+
+# ---- Global Defaults (applies to ALL hosts unless overridden) ----
+Host *
+    # Use only strong ciphers and key exchange
+    KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group16-sha512
+    Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com
+    MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com
+    HostKeyAlgorithms ssh-ed25519,ssh-ed25519-cert-v01@openssh.com
+
+    # Security defaults
+    ForwardAgent no
+    ForwardX11 no
+
+    # Connection keepalive (prevents idle disconnects)
+    ServerAliveInterval 60
+    ServerAliveCountMax 5
+
+    # Don't hash known_hosts (easier to manage)
+    HashKnownHosts no
+
+# ---- Example: Production Web Server ----
+Host web-prod
+    HostName 203.0.113.10           # Replace with your server's IP or hostname
+    User yourusername                # Replace with your username on the server
+    Port 22                          # Change if using non-standard port
+    IdentityFile ~/.ssh/id_ed25519   # Key to use for this host
+    IdentitiesOnly yes               # Only try this key (faster, no auth failures)
+
+# ---- Example: Staging Server on Non-Standard Port ----
+Host staging
+    HostName staging.example.com
+    User deploy
+    Port 2222
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
+
+# ---- Example: GitHub ----
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
+
+# ---- Example: GitLab ----
+Host gitlab.com
+    HostName gitlab.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
+
+# ---- Example: Jump Host / Bastion Setup ----
+# Connect through a bastion host first, then to internal servers.
+# This keeps internal servers off the public internet.
+
+# Host bastion
+#     HostName bastion.example.com
+#     User admin
+#     IdentityFile ~/.ssh/id_ed25519
+#
+# Host internal-db
+#     HostName 10.0.1.50
+#     User dbadmin
+#     IdentityFile ~/.ssh/id_ed25519
+#     ProxyJump bastion              # Route through the bastion host
+
+# ---- Example: Work vs Personal Keys ----
+# Use separate keys for work and personal servers.
+
+# Host *.company.com
+#     User yourname
+#     IdentityFile ~/.ssh/id_ed25519_work
+#     IdentitiesOnly yes
+#
+# Host personal-server.com
+#     User yourname
+#     IdentityFile ~/.ssh/id_ed25519_personal
+#     IdentitiesOnly yes
+
+# ---- Example: Legacy Server (RSA key) ----
+# Host legacy-server
+#     HostName legacy.example.com
+#     User admin
+#     IdentityFile ~/.ssh/id_rsa
+#     # Allow stronger ciphers if the old server needs them
+#     # KexAlgorithms +diffie-hellman-group14-sha256
+#     # HostKeyAlgorithms +ssh-rsa
+
+# =============================================================================
+# With this config, instead of typing:
+#   ssh -i ~/.ssh/id_ed25519 -p 2222 deploy@staging.example.com
+#
+# You simply type:
+#   ssh staging
+# =============================================================================
